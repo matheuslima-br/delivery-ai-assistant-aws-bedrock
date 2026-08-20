@@ -1,0 +1,17 @@
+# Arquivos temporários do Python
+__pycache__/
+*.pyc
+
+# Ambiente virtual Python, caso seja criado futuramente
+.venv/
+
+# Variáveis de ambiente, caso sejam utilizadas
+.env
+.env.*
+
+# Credenciais locais da AWS
+.aws/
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
