@@ -4,63 +4,85 @@ import urllib.request
 import urllib.parse
 
 
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+# URL da API Overpass utilizada para consultar
+# dados do OpenStreetMap.
+URL_OVERPASS = "https://overpass-api.de/api/interpreter"
 
 
-def calculate_distance(lat1, lon1, lat2, lon2):
+def calcular_distancia(latitude1, longitude1, latitude2, longitude2):
     """
-    Calculates the distance between two geographic coordinates
-    using the Haversine formula.
+    Calcula a distância entre duas coordenadas geográficas
+    utilizando a fórmula de Haversine.
+
+    Retorna a distância em quilômetros.
     """
 
-    earth_radius_km = 6371
+    raio_terra_km = 6371
 
-    lat1_rad = math.radians(lat1)
-    lat2_rad = math.radians(lat2)
+    latitude1_rad = math.radians(latitude1)
+    latitude2_rad = math.radians(latitude2)
 
-    delta_lat = math.radians(lat2 - lat1)
-    delta_lon = math.radians(lon2 - lon1)
-
-    a = (
-        math.sin(delta_lat / 2) ** 2
-        + math.cos(lat1_rad)
-        * math.cos(lat2_rad)
-        * math.sin(delta_lon / 2) ** 2
+    diferenca_latitude = math.radians(
+        latitude2 - latitude1
     )
 
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    diferenca_longitude = math.radians(
+        longitude2 - longitude1
+    )
 
-    return earth_radius_km * c
+    a = (
+        math.sin(diferenca_latitude / 2) ** 2
+        + math.cos(latitude1_rad)
+        * math.cos(latitude2_rad)
+        * math.sin(diferenca_longitude / 2) ** 2
+    )
+
+    c = 2 * math.atan2(
+        math.sqrt(a),
+        math.sqrt(1 - a)
+    )
+
+    return raio_terra_km * c
 
 
-def build_overpass_query(latitude, longitude, radius, cuisine):
+def criar_consulta_overpass(
+    latitude,
+    longitude,
+    raio,
+    culinaria
+):
     """
-    Builds the Overpass API query.
+    Cria a consulta que será enviada para a API Overpass.
     """
 
-    if cuisine and cuisine.lower() != "any":
-        cuisine_filter = f'[cuisine="{cuisine}"]'
+    if culinaria and culinaria.lower() != "qualquer":
+
+        filtro_culinaria = (
+            f'[cuisine="{culinaria}"]'
+        )
+
     else:
-        cuisine_filter = ""
 
-    return f"""
+        filtro_culinaria = ""
+
+    consulta = f"""
     [out:json];
 
     (
         node[
             "amenity"="restaurant"
-            {cuisine_filter}
+            {filtro_culinaria}
         ](
-            around:{radius},
+            around:{raio},
             {latitude},
             {longitude}
         );
 
         way[
             "amenity"="restaurant"
-            {cuisine_filter}
+            {filtro_culinaria}
         ](
-            around:{radius},
+            around:{raio},
             {latitude},
             {longitude}
         );
@@ -69,145 +91,207 @@ def build_overpass_query(latitude, longitude, radius, cuisine):
     out center;
     """
 
+    return consulta
 
-def query_overpass(query):
+
+def consultar_overpass(consulta):
     """
-    Sends the query to the Overpass API.
+    Envia a consulta para a API Overpass.
     """
 
-    data = urllib.parse.urlencode({
-        "data": query
+    dados = urllib.parse.urlencode({
+        "data": consulta
     }).encode("utf-8")
 
-    request = urllib.request.Request(
-        OVERPASS_URL,
-        data=data,
+    requisicao = urllib.request.Request(
+        URL_OVERPASS,
+        data=dados,
         headers={
-            "User-Agent": "delivery-ai-assistant/1.0"
+            "User-Agent": "assistente-delivery-ia/1.0"
         }
     )
 
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return json.loads(response.read().decode("utf-8"))
+    with urllib.request.urlopen(
+        requisicao,
+        timeout=30
+    ) as resposta:
+
+        return json.loads(
+            resposta.read().decode("utf-8")
+        )
 
 
-def extract_restaurants(data, user_latitude, user_longitude):
+def extrair_restaurantes(
+    dados,
+    latitude_usuario,
+    longitude_usuario
+):
     """
-    Converts OpenStreetMap results into a simplified structure.
+    Converte os dados do OpenStreetMap
+    para uma estrutura simplificada.
     """
 
-    restaurants = []
+    restaurantes = []
 
-    for element in data.get("elements", []):
+    for elemento in dados.get("elements", []):
 
-        tags = element.get("tags", {})
+        etiquetas = elemento.get(
+            "tags",
+            {}
+        )
 
-        latitude = element.get("lat")
-        longitude = element.get("lon")
+        latitude = elemento.get("lat")
+        longitude = elemento.get("lon")
 
-        # Ways usually contain their coordinates inside "center".
+        # Objetos do tipo "way" normalmente
+        # possuem suas coordenadas dentro de "center".
         if latitude is None:
 
-            center = element.get("center", {})
+            centro = elemento.get(
+                "center",
+                {}
+            )
 
-            latitude = center.get("lat")
-            longitude = center.get("lon")
+            latitude = centro.get("lat")
+            longitude = centro.get("lon")
 
         if latitude is None or longitude is None:
             continue
 
-        distance = calculate_distance(
-            user_latitude,
-            user_longitude,
+        distancia = calcular_distancia(
+            latitude_usuario,
+            longitude_usuario,
             latitude,
             longitude
         )
 
-        restaurant = {
-            "name": tags.get(
+        restaurante = {
+
+            "nome": etiquetas.get(
                 "name",
-                "Restaurant without name"
+                "Restaurante sem nome"
             ),
 
-            "cuisine": tags.get(
+            "culinaria": etiquetas.get(
                 "cuisine",
-                "Not informed"
+                "Não informado"
             ),
 
-            "address": tags.get(
+            "endereco": etiquetas.get(
                 "addr:street",
-                "Address not informed"
+                "Endereço não informado"
             ),
 
-            "phone": tags.get("phone"),
+            "telefone": etiquetas.get(
+                "phone"
+            ),
 
-            "website": tags.get("website"),
+            "site": etiquetas.get(
+                "website"
+            ),
 
             "latitude": latitude,
 
             "longitude": longitude,
 
-            "distance_km": round(distance, 2)
+            "distancia_km": round(
+                distancia,
+                2
+            )
         }
 
-        restaurants.append(restaurant)
+        restaurantes.append(
+            restaurante
+        )
 
-    # Closest restaurants first.
-    restaurants.sort(
-        key=lambda restaurant: restaurant["distance_km"]
+    # Ordena os restaurantes do mais próximo
+    # para o mais distante.
+    restaurantes.sort(
+        key=lambda restaurante:
+        restaurante["distancia_km"]
     )
 
-    return restaurants
+    return restaurantes
 
 
 def lambda_handler(event, context):
+    """
+    Função principal da AWS Lambda.
+    """
 
-    latitude = float(event["latitude"])
-    longitude = float(event["longitude"])
-
-    radius = int(
-        event.get("radius_m", 5000)
+    latitude = float(
+        event["latitude"]
     )
 
-    cuisine = event.get(
-        "cuisine",
-        "any"
+    longitude = float(
+        event["longitude"]
     )
 
-    quantity = int(
-        event.get("quantity", 20)
+    raio = int(
+        event.get(
+            "raio_m",
+            5000
+        )
     )
 
-    query = build_overpass_query(
+    culinaria = event.get(
+        "culinaria",
+        "qualquer"
+    )
+
+    quantidade = int(
+        event.get(
+            "quantidade",
+            20
+        )
+    )
+
+    # Cria a consulta.
+    consulta = criar_consulta_overpass(
         latitude,
         longitude,
-        radius,
-        cuisine
+        raio,
+        culinaria
     )
 
-    data = query_overpass(query)
+    # Consulta o OpenStreetMap.
+    dados = consultar_overpass(
+        consulta
+    )
 
-    restaurants = extract_restaurants(
-        data,
+    # Processa os restaurantes.
+    restaurantes = extrair_restaurantes(
+        dados,
         latitude,
         longitude
     )
 
-    restaurants = restaurants[:quantity]
+    # Limita a quantidade de resultados.
+    restaurantes = restaurantes[
+        :quantidade
+    ]
 
     return {
-        "status": "success",
 
-        "source": "OpenStreetMap / Overpass API",
+        "status": "sucesso",
 
-        "search": {
+        "fonte": "OpenStreetMap / Overpass API",
+
+        "busca": {
+
             "latitude": latitude,
+
             "longitude": longitude,
-            "radius_m": radius,
-            "cuisine": cuisine
+
+            "raio_m": raio,
+
+            "culinaria": culinaria
+
         },
 
-        "count": len(restaurants),
+        "quantidade": len(
+            restaurantes
+        ),
 
-        "restaurants": restaurants
+        "restaurantes": restaurantes
     }
