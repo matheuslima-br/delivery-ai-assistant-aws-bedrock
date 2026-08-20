@@ -1,0 +1,24 @@
+{
+  "status": "sucesso",
+
+  "quantidade_restaurantes": 5,
+
+  "recomendacoes": [
+    {
+      "nome": "Restaurante Exemplo 1",
+      "distancia_km": 0.8,
+      "culinaria": "Brasileira",
+      "preco": "Não informado",
+      "motivo": "É uma das opções mais próximas encontradas."
+    },
+    {
+      "nome": "Restaurante Exemplo 2",
+      "distancia_km": 1.2,
+      "culinaria": "Pizza",
+      "preco": "Não informado",
+      "motivo": "É uma opção próxima para quem deseja pizza."
+    }
+  ],
+
+  "observacao": "Os nomes acima são apenas exemplos fictícios."
+}
