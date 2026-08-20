@@ -1,4 +1,4 @@
-# 🍽️ Assistente de Delivery com IA
+# Assistente de Delivery com IA
 
 Projeto de um assistente inteligente capaz de encontrar restaurantes
 próximos ao usuário e gerar recomendações personalizadas utilizando
@@ -9,7 +9,7 @@ Amazon Bedrock, Python e dados do OpenStreetMap.
 
 ---
 
-## 🎯 Objetivo
+## Objetivo
 
 Criar um assistente conversacional capaz de responder a solicitações como:
 
@@ -26,7 +26,13 @@ O sistema considera informações como:
 
 ---
 
-## 🏗️ Arquitetura
+## Qual problema resolve?
+
+Ele facilita a descoberta de restaurantes para uma pessoa que está em uma cidade nova. Em vez de simplesmente retornar uma lista de estabelecimentos, o sistema considera o contexto e as preferências do usuário e utiliza IA para apresentar as opções mais relevantes.
+
+---
+
+## Arquitetura
 
 ```text
                         USUÁRIO
