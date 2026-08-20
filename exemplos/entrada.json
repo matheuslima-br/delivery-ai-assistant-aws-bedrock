@@ -1,0 +1,21 @@
+{
+  "cidade": "Manaus",
+  "estado": "Amazonas",
+
+  "latitude": -3.1319,
+  "longitude": -60.0217,
+
+  "raio_m": 5000,
+
+  "culinaria": "qualquer",
+
+  "orcamento": "medio",
+
+  "delivery": true,
+
+  "quantidade": 5,
+
+  "solicitacao_usuario": "Acabei de chegar na cidade e quero sugestões de restaurantes próximos.",
+
+  "historico_conversa": []
+}
