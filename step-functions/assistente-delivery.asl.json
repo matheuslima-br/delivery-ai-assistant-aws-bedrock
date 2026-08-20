@@ -1,0 +1,137 @@
+{
+  "Comment": "Assistente de Delivery com AWS Step Functions, Lambda, OpenStreetMap e Amazon Bedrock",
+
+  "StartAt": "Buscar Restaurantes",
+
+  "QueryLanguage": "JSONata",
+
+  "States": {
+
+    "Buscar Restaurantes": {
+
+      "Type": "Task",
+
+      "Resource": "arn:aws:states:::lambda:invoke",
+
+      "Arguments": {
+
+        "FunctionName": "buscar-restaurantes",
+
+        "Payload": {
+
+          "latitude": "{% $states.input.latitude %}",
+
+          "longitude": "{% $states.input.longitude %}",
+
+          "raio_m": "{% $states.input.raio_m %}",
+
+          "culinaria": "{% $states.input.culinaria %}",
+
+          "quantidade": 20
+        }
+      },
+
+      "Assign": {
+
+        "dados_restaurantes": "{% $states.result.Payload %}"
+      },
+
+      "Next": "Preparar Prompt"
+    },
+
+
+    "Preparar Prompt": {
+
+      "Type": "Pass",
+
+      "Assign": {
+
+        "prompt_usuario": "{% $states.input.solicitacao_usuario %}",
+
+        "dados_restaurantes": "{% $dados_restaurantes %}"
+      },
+
+      "Next": "Invocar Bedrock"
+    },
+
+
+    "Invocar Bedrock": {
+
+      "Type": "Task",
+
+      "Resource": "arn:aws:states:::bedrock:invokeModel",
+
+      "Arguments": {
+
+        "ModelId": "arn:aws:bedrock:us-east-2::foundation-model/nvidia.nemotron-nano-12b-v2",
+
+        "ContentType": "application/json",
+
+        "Accept": "application/json",
+
+        "Body": {
+
+          "messages": [
+
+            {
+              "role": "system",
+
+              "content": "Você é o Assistente de Delivery. Recomende somente restaurantes presentes nos dados fornecidos. Nunca invente nomes, preços, avaliações, horários ou tempos de entrega. Quando uma informação não estiver disponível, diga 'Não informado'. Seja objetivo, amigável e responda no mesmo idioma do usuário."
+            },
+
+            {
+              "role": "user",
+
+              "content": "{% $prompt_usuario %}"
+            },
+
+            {
+              "role": "user",
+
+              "content": "Localização: {% $states.input.cidade %}, {% $states.input.estado %}. Latitude: {% $states.input.latitude %}. Longitude: {% $states.input.longitude %}."
+            },
+
+            {
+              "role": "user",
+
+              "content": "Preferências: culinária={% $states.input.culinaria %}; orçamento={% $states.input.orcamento %}; delivery={% $states.input.delivery %}; quantidade={% $states.input.quantidade %}."
+            },
+
+            {
+              "role": "user",
+
+              "content": "Restaurantes encontrados: {% $string($dados_restaurantes.restaurantes) %}"
+            }
+
+          ],
+
+          "max_tokens": 1000,
+
+          "temperature": 0.3
+        }
+      },
+
+      "Assign": {
+
+        "resposta_assistente": "{% $states.result.Body.output.message.content[0].text %}"
+      },
+
+      "Next": "Sucesso"
+    },
+
+
+    "Sucesso": {
+
+      "Type": "Succeed",
+
+      "Output": {
+
+        "mensagem": "{% $resposta_assistente %}",
+
+        "restaurantes_encontrados": "{% $dados_restaurantes.quantidade %}",
+
+        "fonte": "OpenStreetMap / Overpass API"
+      }
+    }
+  }
+}
