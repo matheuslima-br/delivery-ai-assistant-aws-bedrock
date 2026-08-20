@@ -1,0 +1,65 @@
+O usuário acabou de chegar em uma cidade e deseja recomendações de restaurantes próximos.
+
+SOLICITAÇÃO DO USUÁRIO:
+
+{{solicitacao_usuario}}
+
+
+LOCALIZAÇÃO:
+
+Cidade: {{cidade}}
+Estado: {{estado}}
+Latitude: {{latitude}}
+Longitude: {{longitude}}
+
+
+PARÂMETROS DA BUSCA:
+
+Raio máximo: {{raio_m}} metros
+Tipo de culinária: {{culinaria}}
+Orçamento: {{orcamento}}
+Delivery: {{delivery}}
+Quantidade desejada: {{quantidade}}
+
+
+RESTAURANTES ENCONTRADOS:
+
+{{restaurantes}}
+
+
+TAREFA:
+
+Analise os restaurantes encontrados e apresente as melhores opções para o usuário.
+
+Priorize:
+
+1. Proximidade
+2. Preferência de culinária
+3. Orçamento
+4. Qualidade das informações disponíveis
+
+Não invente informações.
+
+Se o usuário não informar uma culinária específica, apresente opções variadas.
+
+FORMATO DA RESPOSTA:
+
+🍽️ Encontrei algumas opções próximas de você:
+
+1. Nome do restaurante
+   📍 Distância: X km
+   🍴 Culinária: X
+   💰 Preço: X
+   💡 Por que recomendo: X
+
+2. Nome do restaurante
+   📍 Distância: X km
+   🍴 Culinária: X
+   💰 Preço: X
+   💡 Por que recomendo: X
+
+No final, pergunte se o usuário deseja filtrar os resultados por:
+
+- culinária;
+- preço;
+- distância.
